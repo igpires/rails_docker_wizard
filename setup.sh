@@ -126,4 +126,10 @@ EOF
 
 sudo chown -R $(id -u):$(id -g) "$PROJECT_DIR"
 
-echo "Projeto $APP_NAME criado com sucesso e está localizado em $PROJECT_DIR"
+echo 'creating and iniliazing  docker container...'
+docker-compose -f "$PROJECT_DIR/docker-compose.yml" up -d --build
+
+echo ' installing gems and creating database...'
+docker-compose -f "$PROJECT_DIR/docker-compose.yml" exec $APP_NAME bash -c "bundle install && rails db:prepare"
+
+echo "Project $APP_NAME created successfully in $PROJECT_DIR"
