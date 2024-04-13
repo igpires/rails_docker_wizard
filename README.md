@@ -16,3 +16,7 @@ To use this script, follow these steps:
 3. Run the script:
    ```bash
    bash setup.sh
+
+## Demo
+https://github.com/igpires/rails_docker_wizard/assets/54286685/fe4a0e35-b131-44cd-9e3d-1792af912c87
+
