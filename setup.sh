@@ -45,77 +45,15 @@ PROJECT_DIR=$(pwd)/../$APP_NAME
 
 docker run --rm -v "$PROJECT_DIR:/app" ruby:$RUBY_VERSION bash -c "
     gem install rails -v '$RAILS_VERSION' &&
-    rails new /app --database=postgresql --skip-bundle  --skip-git --api  --skip-test --skip-system-test --skip-action-mailbox --skip-action-text --skip-active-storage --skip-action-cable --skip-sprockets --skip-spring --skip-javascript --skip-turbolinks --skip-webpack-install --skip-bootsnap &&
-
-    cat > /app/Dockerfile <<EOF
-FROM ruby:$RUBY_VERSION
-RUN apt-get update -qq && apt-get install -y nodejs postgresql-client
-WORKDIR /app
-COPY . /app
-RUN bundle install
-CMD [\"rails\", \"server\", \"-b\", \"0.0.0.0\"]
-EXPOSE 3000
-EOF
-
-    cat > /app/docker-compose.yml <<EOF
-services:
-  $APP_NAME:
-    build: .
-    ports:
-      - '3000:3000'
-    volumes:
-      - .:/app
-    depends_on:
-      - ${APP_NAME}_db
-    environment:
-      DB_HOST: ${APP_NAME}_db
-      RAILS_ENV: development
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-
-  ${APP_NAME}_db:
-    image: postgres:14
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${APP_NAME}_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-
-volumes:
-  postgres_data:
-
-EOF
-
-
-    cat > /app/config/database.yml <<EOF
-default: &default
-  adapter: postgresql
-  encoding: unicode
-  pool: <%= ENV['RAILS_MAX_THREADS'] ||  5 %>
-  username: <%= ENV['POSTGRES_USER'] || 'postgres' %>
-  password: <%= ENV['POSTGRES_PASSWORD'] || 'password' %>
-  host: <%= ENV['DB_HOST'] || 'db' %>
-  port: <%= ENV['DB_PORT'] || 5432 %>
-
-development:
-  <<: *default
-  database: ${APP_NAME}_development
-
-test:
-  <<: *default
-  database: ${APP_NAME}_test
-
-production:
-  <<: *default
-  database: ${APP_NAME}_production
-
-EOF
-"
+    rails new /app --database=postgresql --skip-bundle  --skip-git --api  --skip-test --skip-system-test --skip-action-mailbox --skip-action-text --skip-active-storage --skip-action-cable --skip-sprockets --skip-spring --skip-javascript --skip-turbolinks --skip-webpack-install --skip-bootsnap"
 
 sudo chown -R $(id -u):$(id -g) "$PROJECT_DIR"
+
+echo 'creating docker environment...'
+bash $(dirname "$0")/create_docker_environment.sh $APP_NAME $RUBY_VERSION
+
+echo 'setting up database...'
+bash $(dirname "$0")/setup_database.sh $APP_NAME
 
 echo 'creating and iniliazing  docker container...'
 docker-compose -f "$PROJECT_DIR/docker-compose.yml" up -d --build
